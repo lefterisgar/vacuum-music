@@ -21,6 +21,7 @@ printTick() {
 }
 
 webserverInit() {
+    rm -r data/www/*
     printInfo 'Searching for available port...'
 
     while nc -z 127.0.0.1 "$port" 2>/dev/null || [ -z "$port" ]; do
@@ -47,6 +48,29 @@ webserverInit() {
 }
 
 sshConnect() { ssh 192.168.1.7 -l root 'sh -s' < play-music.sh "$(hostname -I | cut -d' ' -f1)":"$port"; }
+
+askTrack() {
+    printf -- "Track name        : %s\n" "${file##*/}"
+    printf -- "Number %-10s : " "[1-$maxNum]"
+
+    read num
+}
+
+showTrackList() {
+    local i=1
+    printf -- '+-------------------+-----------------+\n'
+    printf -- '| Track name        |          Number |\n'
+    printf -- '+-------------------+-----------------+\n'
+
+    for file in data/www/*; do
+        if [ -f $file ]; then
+            symlink=$(readlink $file)
+            printf -- "|%-19s|%17s|\n" "${symlink##*/}" "$i"
+            i=$(( i + 1 ))
+        fi
+    done
+    printf -- '+-------------------+-----------------+\n'
+}
 
 # Use script's directory as root
 cd "$(dirname "$0")" || exit
@@ -92,11 +116,33 @@ webserverInit
 
 i=1
 
-# Create a symlink for each file inside the directory
-for file in data/music/*; do
-    ln -s ../../"$file" data/www/$i
-    i=$(( i + 1 ))
-done
+# Ask the user to select sorting method
+printQuestion 'How do you want to sort the files?\n'
+printf '    (1) Automatically\n    (2) Manually'
+read -s -n 1
+printf '\n\n'
+
+if [[ $REPLY == [2] ]]; then
+    for file in data/music/*; do
+        maxNum=$(ls data/music | wc -l)
+        askTrack
+
+        until [[ "$num" -gt "0" ]] && [[ "$num" -le "$maxNum" ]] && ln -s ../../"$file" data/www/"$num" 2>/dev/null; do
+            printf '\n'
+            printCross 'Invalid input. Please try again!\n'
+            askTrack
+        done
+        printf '\n'
+    done
+    showTrackList
+else
+    # Create a symlink for each file inside the directory
+    for file in data/music/*; do
+        ln -s ../../"$file" data/www/$i
+        i=$(( i + 1 ))
+    done
+    showTrackList
+fi
 
 # Connect to the robot over SSH and execute the payload
 sshConnect
