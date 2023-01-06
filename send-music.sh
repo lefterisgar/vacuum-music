@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Perform cleanup operations on exit (e.g. stopping the web server)
 trap "exit" INT TERM
 trap "kill 0" EXIT
 
@@ -20,22 +21,27 @@ printTick() {
     printf -- '[\e[1;32m✓\e[0m] \e[1;32m%b\e[0m\n' "${*}"
 }
 
+# Initialize the web server
 webserverInit() {
+    # Remove all previously created files (e.g. symlinks)
     rm -r data/www/*
+
+    # Choose a random port and check if it is being used by another process
     printInfo 'Searching for available port...'
 
     while nc -z 127.0.0.1 "$port" 2>/dev/null || [ -z "$port" ]; do
         port=$(( 1024 + RANDOM % 65535 ))
     done
 
+    # Announce that a port has been found and we are ready to start
     printInfo "$port" 'is available!'
 
-    printInfo 'Starting web server...'
-
     # Start the web server
+    printInfo 'Starting web server...'
     data/valetudo-helper-httpbridge-amd64 -p "$port" -d data/www >/dev/null &
 
     # Small delay to allow for the server to start
+    # NOTE: Might not suffice for slower hardware
     sleep 0.8
 
     # Test the server
@@ -47,21 +53,24 @@ webserverInit() {
     fi
 }
 
+# Connect to the robot via SSH and run the payload
 sshConnect() { ssh 192.168.1.7 -l root 'sh -s' < play-music.sh "$(hostname -I | cut -d' ' -f1)":"$port"; }
 
+# Ask the user to pick the order in which the tracks will be played
 askTrack() {
     printf -- "Track name        : %s\n" "${file##*/}"
     printf -- "Number %-10s : " "[1-$maxNum]"
-
     read num
 }
 
+# Show the order in which the tracks will be played
 showTrackList() {
     local i=1
     printf -- '+-------------------+-----------------+\n'
     printf -- '| Track name        |          Number |\n'
     printf -- '+-------------------+-----------------+\n'
 
+    # Loop over all symlinks and print their target as well as their order
     for file in data/www/*; do
         if [ -f $file ]; then
             symlink=$(readlink $file)
@@ -78,6 +87,7 @@ cd "$(dirname "$0")" || exit
 # Create a data directory
 mkdir -p data
 
+# Check if the web server executable exists
 if [ -f data/valetudo-helper-httpbridge-amd64 ]; then
     printTick "valetudo-helper-httpbridge $(data/valetudo-helper-httpbridge-amd64 -V)"
 else
@@ -116,20 +126,26 @@ webserverInit
 
 i=1
 
-# Ask the user to select sorting method
+# Ask the user to select a sorting method
 printQuestion 'How do you want to sort the files?\n'
 printf '    (1) Automatically\n    (2) Manually'
 read -s -n 1
 printf '\n\n'
 
 if [[ $REPLY == [2] ]]; then
+    # Loop over all files inside the music directory
     for file in data/music/*; do
         maxNum=$(ls data/music | wc -l)
+        # Ask the user for input
         askTrack
 
+        # Run until the given number is valid and create a symlink named after it
         until [[ "$num" -gt "0" ]] && [[ "$num" -le "$maxNum" ]] && ln -s ../../"$file" data/www/"$num" 2>/dev/null; do
+            # Print an error if the number is invalid
             printf '\n'
             printCross 'Invalid input. Please try again!\n'
+
+            # Ask the user again
             askTrack
         done
         printf '\n'
