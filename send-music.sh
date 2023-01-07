@@ -23,8 +23,18 @@ printTick() {
 
 # Initialize the web server
 webserverInit() {
+    # Check if python3 is installed
+    printInfo 'Checking Python version...'
+
+    if [[ $(command -v python3) ]]; then
+        printTick "$(python3 -V)"
+    else
+        printCross 'Python 3 is not installed!'
+        exit 2
+    fi
+
     # Remove all previously created files (e.g. symlinks)
-    rm -r data/www/*
+    rm -rf data/www/*
 
     # Choose a random port and check if it is being used by another process
     printInfo 'Searching for available port...'
@@ -38,11 +48,11 @@ webserverInit() {
 
     # Start the web server
     printInfo 'Starting web server...'
-    data/valetudo-helper-httpbridge-amd64 -p "$port" -d data/www >/dev/null &
+    python3 -m http.server $port -d data/www 2>/dev/null 1>&2 &
 
     # Small delay to allow for the server to start
     # NOTE: Might not suffice for slower hardware
-    sleep 0.8
+    sleep 0.3
 
     # Test the server
     if nc -z 127.0.0.1 "$port"; then
@@ -72,11 +82,9 @@ showTrackList() {
 
     # Loop over all symlinks and print their target as well as their order
     for file in data/www/*; do
-        if [ -f $file ]; then
-            symlink=$(readlink $file)
-            printf -- "|%-19s|%17s|\n" "${symlink##*/}" "$i"
-            i=$(( i + 1 ))
-        fi
+        symlink=$(readlink $file)
+        printf -- "|%-19s|%17s|\n" "${symlink##*/}" "$i"
+        i=$(( i + 1 ))
     done
     printf -- '+-------------------+-----------------+\n'
 }
@@ -86,40 +94,6 @@ cd "$(dirname "$0")" || exit
 
 # Create a data directory
 mkdir -p data
-
-# Check if the web server executable exists
-if [ -f data/valetudo-helper-httpbridge-amd64 ]; then
-    printTick "valetudo-helper-httpbridge $(data/valetudo-helper-httpbridge-amd64 -V)"
-else
-    printCross 'The required web server binary was not found!'
-
-    # Ask the user if he wants to download it
-    read -n 1 -r -p "$(printQuestion "Do you want to automatically download it? (y/n) ")"
-    printf '\n'
-
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        # Check if wget is present on the system
-        if [[ $(command -v wget) ]]; then
-            # Download the latest release from GitHub
-            printInfo 'Downloading web server...'
-            wget -q --show-progress -P data https://github.com/Hypfer/valetudo-helper-httpbridge/releases/latest/download/valetudo-helper-httpbridge-amd64
-
-            # Make the file executable
-            printInfo 'Making the file executable...'
-            chmod +x data/valetudo-helper-httpbridge-amd64
-
-            printTick 'Installation successful!'
-        else
-            printCross 'Wget is not installed! Can'\''t proceed.'
-            exit 2
-        fi
-    else
-        # Provide instructions for manual installation of the web server
-        printInfo 'You can manually download it at: https://github.com/Hypfer/valetudo-helper-httpbridge/releases/latest.'
-        printInfo 'Then place the executable under the data directory.'
-        exit 2
-    fi
-fi
 
 # Initialize the web server
 webserverInit
