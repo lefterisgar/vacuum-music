@@ -136,15 +136,16 @@ if [[ $REPLY == [2] ]]; then
         done
         printf '\n'
     done
-    showTrackList
 else
     # Create a symlink for each file inside the directory
     for file in data/music/*; do
         ln -s ../../"$file" data/www/$i
         i=$(( i + 1 ))
     done
-    showTrackList
 fi
+
+# Show the tracks in their respective order
+showTrackList
 
 # Connect to the robot over SSH and execute the payload
 sshConnect
