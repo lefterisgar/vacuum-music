@@ -68,25 +68,35 @@ sshConnect() { ssh 192.168.1.7 -l root 'sh -s' < play-music.sh "$(hostname -I | 
 
 # Ask the user to pick the order in which the tracks will be played
 askTrack() {
-    printf -- "Track name        : %s\n" "${file##*/}"
-    printf -- "Number %-10s : " "[1-$maxNum]"
+    printf -- "Track name      : %s\n" "${file##*/}"
+    printf -- "Number %-8s : " "[1-$maxNum]"
     read num
 }
 
 # Show the order in which the tracks will be played
 showTrackList() {
     local i=1
-    printf -- '+-------------------+-----------------+\n'
-    printf -- '| Track name        |          Number |\n'
-    printf -- '+-------------------+-----------------+\n'
+
+    printf -- '+--------+----------------------+\n'
+    printf -- '| Number |      Track name      |\n'
+    printf -- '+--------+----------------------+\n'
 
     # Loop over all symlinks and print their target as well as their order
     for file in data/www/*; do
-        symlink=$(readlink $file)
-        printf -- "|%-19s|%17s|\n" "${symlink##*/}" "$i"
+        # Find symlink target
+        symlink=$(readlink "$file")
+
+        # Remove the path
+        symlink=${symlink##*/}
+
+        # Make sure the filename isn't too big
+        symlink=${symlink:0:20}
+
+        # Print number & track name
+        printf -- "| %-7s|%21s |\n" "$i" "$symlink"
         i=$(( i + 1 ))
     done
-    printf -- '+-------------------+-----------------+\n'
+    printf -- '+--------+----------------------+\n'
 }
 
 # Use script's directory as root
