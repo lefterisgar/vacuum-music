@@ -103,10 +103,10 @@ showTrackList() {
 manualSort() {
     # Count the number of files inside the music directory
     # shellcheck disable=SC2012
-    maxNum=$(ls data/music | wc -l)
+    maxNum=$(ls data/music/*.ogg | wc -l)
 
     # Loop over all files inside the music directory
-    for file in data/music/*; do
+    for file in data/music/*.ogg; do
         # Ask the user for input
         askTrack
 
@@ -128,7 +128,7 @@ autoSort() {
     local i=1
 
     # Create a symlink for each file inside the directory
-    for file in data/music/*; do
+    for file in data/music/*.ogg; do
         ln -s ../../"$file" data/www/$i
         i=$(( i + 1 ))
     done
