@@ -77,9 +77,9 @@ askTrack() {
 showTrackList() {
     local i=1
 
-    printf -- '+--------+----------------------+\n'
-    printf -- '| Number |      Track name      |\n'
-    printf -- '+--------+----------------------+\n'
+    printf -- '+--------+--------------------------------+\n'
+    printf -- '| Number |           Track name           |\n'
+    printf -- '+--------+--------------------------------+\n'
 
     # Loop over all symlinks and print their target as well as their order
     for file in data/www/*; do
@@ -90,13 +90,13 @@ showTrackList() {
         symlink=${symlink##*/}
 
         # Make sure the filename isn't too big
-        symlink=${symlink:0:20}
+        symlink=${symlink:0:30}
 
         # Print number & track name
-        printf -- "| %-7s|%21s |\n" "$i" "$symlink"
+        printf -- "| %-7s|%31s |\n" "$i" "$symlink"
         i=$(( i + 1 ))
     done
-    printf -- '+--------+----------------------+\n'
+    printf -- '+--------+--------------------------------+\n'
 }
 
 # Use script's directory as root
