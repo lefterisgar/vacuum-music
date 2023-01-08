@@ -48,7 +48,7 @@ webserverInit() {
 
     # Start the web server
     printInfo 'Starting web server...'
-    python3 -m http.server $port -d data/www 2>/dev/null 1>&2 &
+    python3 -m http.server "$port" -d data/www 2>/dev/null 1>&2 &
 
     # Small delay to allow for the server to start
     # NOTE: Might not suffice for slower hardware
@@ -70,7 +70,7 @@ sshConnect() { ssh 192.168.1.7 -l root 'sh -s' < play-music.sh "$(hostname -I | 
 askTrack() {
     printf -- "Track name      : %s\n" "${file##*/}"
     printf -- "Number %-8s : " "[1-$maxNum]"
-    read num
+    read -r num
 }
 
 # Show the order in which the tracks will be played
@@ -102,6 +102,7 @@ showTrackList() {
 # Sort tracks manually, according to user input
 manualSort() {
     # Count the number of files inside the music directory
+    # shellcheck disable=SC2012
     maxNum=$(ls data/music | wc -l)
 
     # Loop over all files inside the music directory
@@ -145,7 +146,7 @@ webserverInit
 # Ask the user to select a sorting method
 printQuestion 'How do you want to sort the files?\n'
 printf '    (1) Automatically\n    (2) Manually'
-read -s -n 1
+read -r -s -n 1
 printf '\n\n'
 
 if [[ $REPLY == [2] ]]; then
