@@ -117,9 +117,11 @@ read -s -n 1
 printf '\n\n'
 
 if [[ $REPLY == [2] ]]; then
+    # Count the number of files inside the music directory
+    maxNum=$(ls data/music | wc -l)
+
     # Loop over all files inside the music directory
     for file in data/music/*; do
-        maxNum=$(ls data/music | wc -l)
         # Ask the user for input
         askTrack
 
