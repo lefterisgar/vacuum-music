@@ -99,24 +99,8 @@ showTrackList() {
     printf -- '+--------+--------------------------------+\n'
 }
 
-# Use script's directory as root
-cd "$(dirname "$0")" || exit
-
-# Create a data directory
-mkdir -p data
-
-# Initialize the web server
-webserverInit
-
-i=1
-
-# Ask the user to select a sorting method
-printQuestion 'How do you want to sort the files?\n'
-printf '    (1) Automatically\n    (2) Manually'
-read -s -n 1
-printf '\n\n'
-
-if [[ $REPLY == [2] ]]; then
+# Sort tracks manually, according to user input
+manualSort() {
     # Count the number of files inside the music directory
     maxNum=$(ls data/music | wc -l)
 
@@ -126,7 +110,7 @@ if [[ $REPLY == [2] ]]; then
         askTrack
 
         # Run until the given number is valid and create a symlink named after it
-        until [[ "$num" -gt "0" ]] && [[ "$num" -le "$maxNum" ]] && ln -s ../../"$file" data/www/"$num" 2>/dev/null; do
+        until [[ "$num" -gt "0" && "$num" -le "$maxNum" ]] && ln -s ../../"$file" data/www/"$num" 2>/dev/null; do
             # Print an error if the number is invalid
             printf '\n'
             printCross 'Invalid input. Please try again!\n'
@@ -136,12 +120,38 @@ if [[ $REPLY == [2] ]]; then
         done
         printf '\n'
     done
-else
+}
+
+# Sort tracks automatically
+autoSort() {
+    local i=1
+
     # Create a symlink for each file inside the directory
     for file in data/music/*; do
         ln -s ../../"$file" data/www/$i
         i=$(( i + 1 ))
     done
+}
+
+# Use script's directory as root
+cd "$(dirname "$0")" || exit
+
+# Create a data directory
+mkdir -p data
+
+# Initialize the web server
+webserverInit
+
+# Ask the user to select a sorting method
+printQuestion 'How do you want to sort the files?\n'
+printf '    (1) Automatically\n    (2) Manually'
+read -s -n 1
+printf '\n\n'
+
+if [[ $REPLY == [2] ]]; then
+    manualSort
+else
+    autoSort
 fi
 
 # Show the tracks in their respective order
