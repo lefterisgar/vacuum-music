@@ -21,6 +21,123 @@ printTick() {
     printf -- '[\e[1;32m✓\e[0m] \e[1;32m%b\e[0m\n' "${*}"
 }
 
+# Ask the user to pick the order in which the tracks will be played
+askTrack() {
+    printf -- "Track name      : %s\n" "${file##*/}"
+    printf -- "Number %-8s : " "[1-$maxNum]"
+    read -r num
+}
+
+# Function that sorts the imported tracks
+sortTracks() {
+    # Ask the user to select a sorting method
+    printQuestion 'How do you want to sort the files?\n'
+    printf '    (1) Automatically\n    (2) Manually'
+    read -r -s -n 1
+    printf '\n\n'
+
+    # Remove all previously created files (e.g. symlinks)
+    rm -rf data/www/*
+
+    # Sort tracks manually, according to user input
+    if [[ $REPLY == [2] ]]; then
+        # Count the number of files inside the music directory
+        # shellcheck disable=SC2012
+        maxNum=$(ls data/music/*.ogg | wc -l)
+
+        # Loop over all files inside the music directory
+        for file in data/music/*.ogg; do
+            # Ask the user for input
+            askTrack
+
+            # Run until the given number is valid and create a symlink named after it
+            until [[ "$num" -gt "0" && "$num" -le "$maxNum" ]] && ln -s ../../"$file" data/www/"$num" 2>/dev/null; do
+                # Print an error if the number is invalid
+                printf '\n'
+                printCross 'Invalid input. Please try again!\n'
+
+                # Ask the user again
+                askTrack
+            done
+            printf '\n'
+        done
+    # Otherwise, sort tracks automatically
+    else
+        local i=1
+
+        # Create a symlink for each file inside the directory
+        for file in data/music/*.ogg; do
+            ln -s ../../"$file" data/www/$i
+            i=$(( i + 1 ))
+        done
+    fi
+}
+
+# Import tracks from a directory or online service
+importTracks() {
+    # Exit if ffmpeg is not installed
+    if [[ ! $(command -v ffmpeg) ]]; then
+        printCross 'ffmpeg is not installed!'
+        exit 2
+    fi
+
+    # Ask the user to select an import method
+    printQuestion 'Where would you like to import tracks from?\n'
+    printf '    (1) From a directory\n    (2) From an online service (e.g. YouTube)'
+    read -r -s -n 1
+    printf '\n\n'
+
+    if [[ $REPLY == [1] ]]; then
+        printf -- 'Directory path : '
+        read -r dirname
+
+        # Convert each file to a format that the robot can play
+        for file in "$dirname"/*; do
+            ffmpeg -i "$file" -c:a libvorbis -vn -ar 48000 "data/music/${file##*/}.ogg"
+        done
+    elif [[ $REPLY == [2] ]]; then
+        # Exit if yt-dlp is not installed
+        if [[ ! $(command -v yt-dlp) ]]; then
+            printCross 'yt-dlp is not installed!'
+            exit 2
+        fi
+
+        printf -- 'Video or playlist URL : '
+        read -r url
+
+        yt-dlp -o 'data/music/%(title)s.%(ext)s' -x --audio-format vorbis "$url"
+    fi
+
+    # Sort the tracks after an import has been completed
+    sortTracks
+}
+
+# Show the order in which the tracks will be played
+showTrackList() {
+    local i=1
+
+    printf -- '+--------+--------------------------------+\n'
+    printf -- '| Number |           Track name           |\n'
+    printf -- '+--------+--------------------------------+\n'
+
+    # Loop over all symlinks and print their target as well as their order
+    for file in data/www/*; do
+        # Find symlink target
+        symlink=$(readlink "$file")
+
+        # Remove the path
+        symlink=${symlink##*/}
+
+        # Make sure the filename isn't too big
+        symlink=${symlink:0:30}
+
+        # Print number & track name
+        printf -- "| %-7s|%31s |\n" "$i" "$symlink"
+        i=$(( i + 1 ))
+    done
+    printf -- '+--------+--------------------------------+\n'
+}
+
 # Initialize the web server
 webserverInit() {
     # Check if python3 is installed
@@ -32,9 +149,6 @@ webserverInit() {
         printCross 'Python 3 is not installed!'
         exit 2
     fi
-
-    # Remove all previously created files (e.g. symlinks)
-    rm -rf data/www/*
 
     # Choose a random port and check if it is being used by another process
     printInfo 'Searching for available port...'
@@ -66,94 +180,28 @@ webserverInit() {
 # Connect to the robot via SSH and run the payload
 sshConnect() { ssh 192.168.1.7 -l root 'sh -s' < play-music.sh "$(hostname -I | cut -d' ' -f1)":"$port"; }
 
-# Ask the user to pick the order in which the tracks will be played
-askTrack() {
-    printf -- "Track name      : %s\n" "${file##*/}"
-    printf -- "Number %-8s : " "[1-$maxNum]"
-    read -r num
-}
-
-# Show the order in which the tracks will be played
-showTrackList() {
-    local i=1
-
-    printf -- '+--------+--------------------------------+\n'
-    printf -- '| Number |           Track name           |\n'
-    printf -- '+--------+--------------------------------+\n'
-
-    # Loop over all symlinks and print their target as well as their order
-    for file in data/www/*; do
-        # Find symlink target
-        symlink=$(readlink "$file")
-
-        # Remove the path
-        symlink=${symlink##*/}
-
-        # Make sure the filename isn't too big
-        symlink=${symlink:0:30}
-
-        # Print number & track name
-        printf -- "| %-7s|%31s |\n" "$i" "$symlink"
-        i=$(( i + 1 ))
-    done
-    printf -- '+--------+--------------------------------+\n'
-}
-
-# Sort tracks manually, according to user input
-manualSort() {
-    # Count the number of files inside the music directory
-    # shellcheck disable=SC2012
-    maxNum=$(ls data/music/*.ogg | wc -l)
-
-    # Loop over all files inside the music directory
-    for file in data/music/*.ogg; do
-        # Ask the user for input
-        askTrack
-
-        # Run until the given number is valid and create a symlink named after it
-        until [[ "$num" -gt "0" && "$num" -le "$maxNum" ]] && ln -s ../../"$file" data/www/"$num" 2>/dev/null; do
-            # Print an error if the number is invalid
-            printf '\n'
-            printCross 'Invalid input. Please try again!\n'
-
-            # Ask the user again
-            askTrack
-        done
-        printf '\n'
-    done
-}
-
-# Sort tracks automatically
-autoSort() {
-    local i=1
-
-    # Create a symlink for each file inside the directory
-    for file in data/music/*.ogg; do
-        ln -s ../../"$file" data/www/$i
-        i=$(( i + 1 ))
-    done
-}
-
 # Use script's directory as root
 cd "$(dirname "$0")" || exit
 
 # Create a data directory
 mkdir -p data
 
+# Check for arguments
+case "${1}" in
+    (--import|-i) importTracks ;;
+    (--sort|-s)   sortTracks   ;;
+esac
+
+# Check if the music directory is empty or non-existent
+if [[ -z "$(ls -A data/music)" ]]; then
+    printInfo 'Music directory seems empty. Launching import wizard...'
+
+    # Call the function for importing tracks
+    importTracks
+fi
+
 # Initialize the web server
 webserverInit
-
-# Ask the user to select a sorting method
-printQuestion 'How do you want to sort the files?\n'
-printf '    (1) Automatically\n    (2) Manually'
-read -r -s -n 1
-printf '\n\n'
-
-if [[ $REPLY == [2] ]]; then
-    manualSort
-else
-    autoSort
-fi
 
 # Show the tracks in their respective order
 showTrackList
