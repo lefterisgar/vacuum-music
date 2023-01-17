@@ -220,7 +220,7 @@ sshConnect() {
 cd "$(dirname "$0")" || exit
 
 # Create the required directories
-mkdir -p data/music
+mkdir -p {data/music,data/www}
 
 # Check for arguments
 case "${1}" in
