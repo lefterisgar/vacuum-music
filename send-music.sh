@@ -219,8 +219,8 @@ sshConnect() {
 # Use script's directory as root
 cd "$(dirname "$0")" || exit
 
-# Create a data directory
-mkdir -p data
+# Create the required directories
+mkdir -p data/music
 
 # Check for arguments
 case "${1}" in
@@ -228,7 +228,7 @@ case "${1}" in
     (--sort|-s)   sortTracks   ;;
 esac
 
-# Check if the music directory is empty or non-existent
+# Check if the music directory is empty
 if [[ -z "$(ls -A data/music)" ]]; then
     printInfo 'Music directory seems empty. Launching import wizard...'
 
