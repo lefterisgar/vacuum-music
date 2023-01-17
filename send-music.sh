@@ -108,9 +108,11 @@ importTracks() {
             exit 2
         fi
 
+        # Ask the user to provide a URL
         printf -- 'Video or playlist URL : '
         read -r url
 
+        # Download the file using yt-dlp and then convert it to vorbis, without keeping the original file
         yt-dlp -o 'data/music/%(title)s.%(ext)s' -x --audio-format vorbis "$url"
     fi
 
@@ -141,6 +143,7 @@ showTrackList() {
         printf -- "| %-7s|%31s |\n" "$i" "$symlink"
         i=$(( i + 1 ))
     done
+
     printf -- '+--------+--------------------------------+\n'
 }
 
