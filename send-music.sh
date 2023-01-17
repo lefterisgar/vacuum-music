@@ -99,7 +99,7 @@ importTracks() {
 
         # Convert each file to a format that the robot can play
         for file in "$dirname"/*; do
-            ffmpeg -i "$file" -c:a libvorbis -vn -ar 48000 "data/music/${file##*/}.ogg"
+            ffmpeg -hide_banner -loglevel error -i "$file" -c:a libvorbis -vn -ar 48000 "data/music/${file##*/}.ogg"
         done
     elif [[ $REPLY == [2] ]]; then
         # Exit if yt-dlp is not installed
@@ -113,7 +113,9 @@ importTracks() {
         read -r url
 
         # Download the file using yt-dlp and then convert it to vorbis, without keeping the original file
-        yt-dlp -o 'data/music/%(title)s.%(ext)s' -x --audio-format vorbis "$url"
+        yt-dlp -q --progress -o 'data/music/%(title)s.%(ext)s' -x --audio-format vorbis "$url"
+
+        printf '\n'
     fi
 
     # Sort the tracks after an import has been completed
