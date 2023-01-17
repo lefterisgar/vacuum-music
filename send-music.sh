@@ -28,6 +28,12 @@ askTrack() {
     read -r num
 }
 
+# Ask the user to input the robot's IP address
+askIP() {
+    printf -- "Robot IP : "
+    read -r ip
+}
+
 # Function that sorts the imported tracks
 sortTracks() {
     # Ask the user to select a sorting method
@@ -178,7 +184,34 @@ webserverInit() {
 }
 
 # Connect to the robot via SSH and run the payload
-sshConnect() { ssh 192.168.1.7 -l root 'sh -s' < play-music.sh "$(hostname -I | cut -d' ' -f1)":"$port"; }
+sshConnect() {
+    # Check if git is installed
+    if [[ $(command -v git) ]]; then
+        # Provide a hint
+        printInfo 'Leave the field empty for the previous IP to be used'
+
+        # Ask the user for input
+        askIP
+
+        # Check if the variable is empty
+        if [[ -z $ip ]]; then
+            # Fetch the IP from the config file (if available)
+            ip=$(git config -f data/.config network.ip "$ip")
+            printf -- "\033[1A\033[11C%s\n" "$ip"
+        # If the user has provided an IP, store it for future use
+        else
+            # Store the IP in the config file
+            git config -f data/.config network.ip "$ip"
+        fi
+    # If git is not installed, just ask the user for an IP each time the script is run
+    else
+        # Ask the user for input
+        askIP
+    fi
+
+    # SSH into the robot
+    ssh "$ip" -l root 'sh -s' < play-music.sh "$(hostname -I | cut -d' ' -f1)":"$port"
+}
 
 # Use script's directory as root
 cd "$(dirname "$0")" || exit
