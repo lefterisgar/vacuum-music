@@ -94,7 +94,7 @@ importTracks() {
     printf '\n\n'
 
     if [[ $REPLY == [1] ]]; then
-        printf -- 'Directory path : '
+        printf -- '    Directory path : '
         read -r dirname
 
         # Convert each file to a format that the robot can play
@@ -109,7 +109,7 @@ importTracks() {
         fi
 
         # Ask the user to provide a URL
-        printf -- 'Video or playlist URL : '
+        printf -- '    Video or playlist URL : '
         read -r url
 
         # Download the file using yt-dlp and then convert it to vorbis, without keeping the original file
