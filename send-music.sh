@@ -34,6 +34,18 @@ askIP() {
     read -r ip
 }
 
+# Determine if the provided IP is valid
+# NOTE: An SSH server must be listening to this IP address
+checkIP() {
+    if nc -z "$ip" 22 2>/dev/null; then
+        printTick 'Robot SSH port open'
+    else
+        # Print a failure message and exit
+        printCross 'The robot is unreachable. Make sure you are able to connect to it via SSH and try again!'
+        exit 113 # No route to host
+    fi
+}
+
 # Function that sorts the imported tracks
 sortTracks() {
     # Ask the user to select a sorting method
@@ -203,8 +215,14 @@ sshConnect() {
             # Fetch the IP from the config file (if available)
             ip=$(git config -f data/.config network.ip)
             printf -- "\033[1A\033[11C%s\n" "$ip"
+
+            # Check if the IP is valid (after autocompletion)
+            checkIP
         # If the user has provided an IP, store it for future use
         else
+            # Check if the IP is valid (before storing to config)
+            checkIP
+
             # Store the IP in the config file
             git config -f data/.config network.ip "$ip"
         fi
@@ -212,6 +230,9 @@ sshConnect() {
     else
         # Ask the user for input
         askIP
+
+        # Check if the provided IP is valid
+        checkIP
     fi
 
     # SSH into the robot
