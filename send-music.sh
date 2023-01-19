@@ -218,7 +218,7 @@ sshConnect() {
         if [[ -z $ip ]]; then
             # Fetch the IP from the config file (if available)
             ip=$(git config -f data/.config network.ip)
-            printf -- "\033[1A\033[11C%s\n" "$ip"
+            printf -- "\033[1A\033[15C%s\n" "$ip"
 
             # Check if the IP is valid (after autocompletion)
             checkIP
