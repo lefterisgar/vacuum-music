@@ -201,7 +201,7 @@ sshConnect() {
         # Check if the variable is empty
         if [[ -z $ip ]]; then
             # Fetch the IP from the config file (if available)
-            ip=$(git config -f data/.config network.ip "$ip")
+            ip=$(git config -f data/.config network.ip)
             printf -- "\033[1A\033[11C%s\n" "$ip"
         # If the user has provided an IP, store it for future use
         else
