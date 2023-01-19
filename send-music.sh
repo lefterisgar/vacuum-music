@@ -30,14 +30,14 @@ askTrack() {
 
 # Ask the user to input the robot's IP address
 askIP() {
-    printf -- "Robot IP : "
+    printf -- "    Robot IP : "
     read -r ip
 }
 
 # Determine if the provided IP is valid
 # NOTE: An SSH server must be listening to this IP address
 checkIP() {
-    if nc -z "$ip" 22 2>/dev/null; then
+    if nc -z -w 5 "$ip" 22 2>/dev/null; then
         printTick 'Robot SSH port open'
     else
         # Print a failure message and exit
