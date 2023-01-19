@@ -14,7 +14,7 @@ printInfo() {
 }
 
 printQuestion() {
-    printf -- '\e[0m[\e[1;94m?\e[0m] %b' "${*}"
+    printf -- '\e[0m[\e[1;94m?\e[0m] %b\n' "${*}"
 }
 
 printTick() {
@@ -38,7 +38,7 @@ askIP() {
 # NOTE: An SSH server must be listening to this IP address
 checkIP() {
     if nc -z -w 5 "$ip" 22 2>/dev/null; then
-        printTick 'Robot SSH port open'
+        printTick 'Robot SSH port open\n'
     else
         # Print a failure message and exit
         printCross 'The robot is unreachable. Make sure you are able to connect to it via SSH and try again!'
@@ -49,7 +49,7 @@ checkIP() {
 # Function that sorts the imported tracks
 sortTracks() {
     # Ask the user to select a sorting method
-    printQuestion 'How do you want to sort the files?\n'
+    printQuestion 'How do you want to sort the files?'
     printf '    (1) Automatically\n    (2) Manually'
     read -r -s -n 1
     printf '\n\n'
@@ -100,7 +100,7 @@ importTracks() {
     fi
 
     # Ask the user to select an import method
-    printQuestion 'Where would you like to import tracks from?\n'
+    printQuestion 'Where would you like to import tracks from?'
     printf '    (1) From a directory\n    (2) From an online service (e.g. YouTube)'
     read -r -s -n 1
     printf '\n\n'
@@ -138,9 +138,10 @@ importTracks() {
 showTrackList() {
     local i=1
 
-    printf -- '+--------+--------------------------------+\n'
-    printf -- '| Number |           Track name           |\n'
-    printf -- '+--------+--------------------------------+\n'
+    printf -- '%s\n' \
+    "+--------+--------------------------------+" \
+    "| Number |           Track name           |" \
+    "+--------+--------------------------------+" \
 
     # Loop over all symlinks and print their target as well as their order
     for file in data/www/*; do
@@ -158,7 +159,8 @@ showTrackList() {
         i=$(( i + 1 ))
     done
 
-    printf -- '+--------+--------------------------------+\n'
+    # Print bottom row
+    printf -- '+--------+--------------------------------+\n\n'
 }
 
 # Initialize the web server
@@ -193,7 +195,7 @@ webserverInit() {
 
     # Test the server
     if nc -z 127.0.0.1 "$port"; then
-        printTick 'The server is running!'
+        printTick 'The server is running!\n'
     else
         printCross 'The server is unreachable. The cause of the issue could not be determined.'
         exit 113
@@ -202,10 +204,12 @@ webserverInit() {
 
 # Connect to the robot via SSH and run the payload
 sshConnect() {
+    printInfo 'Please specify the robot IP.'
+
     # Check if git is installed
     if [[ $(command -v git) ]]; then
         # Provide a hint
-        printInfo 'Leave the field empty for the previous IP to be used'
+        printInfo 'Tip: Leave the field empty for the last IP to be used.'
 
         # Ask the user for input
         askIP
