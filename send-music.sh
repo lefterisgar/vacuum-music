@@ -21,6 +21,12 @@ printTick() {
     printf -- '[\e[1;32m✓\e[0m] \e[1;32m%b\e[0m\n' "${*}"
 }
 
+# Print an error message on invalid input
+invalidArgument() {
+    printCross "Invalid argument!"
+    exit 22
+}
+
 # Ask the user to pick the order in which the tracks will be played
 askTrack() {
     printf -- "Track name      : %s\n" "${file##*/}"
@@ -251,8 +257,9 @@ mkdir -p {data/music,data/www}
 
 # Check for arguments
 case "${1}" in
-    (--import|-i) importTracks ;;
-    (--sort|-s)   sortTracks   ;;
+    (--import|-i) importTracks    ;;
+    (--sort|-s)   sortTracks      ;;
+    (*)           invalidArgument ;;
 esac
 
 # Check if the music directory is empty
