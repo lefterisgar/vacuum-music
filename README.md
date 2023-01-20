@@ -14,7 +14,7 @@ There exist two scripts:
 
 The main script is written in Bash, thus **only GNU/Linux** (and probably WSL) is supported. It would require a complete rewrite for cross-platform support to be added.
 
-## First set-up & Dependencies
+## First setup & Dependencies
 
 Before using the scripts, make sure that your vacuum robot is reachable via SSH on the default port (22), the SSH keys on your computer are stored in ~/.ssh and you are able to connect without specifying a login password.
 
