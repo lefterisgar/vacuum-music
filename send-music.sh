@@ -245,8 +245,18 @@ sshConnect() {
         checkIP
     fi
 
-    # SSH into the robot
-    ssh "$ip" -l root 'sh -s' < play-music.sh "$(hostname -I | cut -d' ' -f1)":"$port"
+    # SSH into the robot and stop the music
+    if [[ $1 == 'stop' ]]; then
+        # Kill ogg123
+        ssh "$ip" -l root 'pkill ogg123'
+
+        # Print a success message
+        printTick 'The music has been stopped.'
+    # SSH into the robot and run the payload
+    else
+        # Run the listener script
+        ssh "$ip" -l root 'sh -s' < play-music.sh "$(hostname -I | cut -d' ' -f1)":"$port"
+    fi
 }
 
 # Use script's directory as root
@@ -261,6 +271,7 @@ if [[ -n $1 ]]; then
     case "$1" in
         (--import|-i) importTracks    ;;
         (--sort|-s)   sortTracks      ;;
+        (--stop|-p)   sshConnect stop ;;
         (*)           invalidArgument ;;
     esac
 
