@@ -20,7 +20,7 @@ Before using the scripts, make sure that your vacuum robot is reachable via SSH 
 
 Then, proceed to install the following packages from your distribution's repositories:
 
-NOTE: It is recommended that you install **all** the packages listed below.
+**NOTE:** It is recommended that you install **all** the packages listed below.
 
 <table>
     <th>Package name</th>
@@ -39,10 +39,12 @@ NOTE: It is recommended that you install **all** the packages listed below.
     <tr>
         <td>git</td>
         <td>Persistent settings</td>
+        <td>❌</td>
     </tr>
     <tr>
         <td>yt-dlp</td>
         <td>Online music downloading</td>
+        <td>❌</td>
     </tr>
 </table>
 
