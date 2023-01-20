@@ -255,12 +255,15 @@ cd "$(dirname "$0")" || exit
 # Create the required directories
 mkdir -p {data/music,data/www}
 
-# Check for arguments
-case "${1}" in
-    (--import|-i) importTracks    ;;
-    (--sort|-s)   sortTracks      ;;
-    (*)           invalidArgument ;;
-esac
+# Run only if an argument has been passed
+if [[ -n $1 ]]; then
+    # Check for arguments
+    case "$1" in
+        (--import|-i) importTracks    ;;
+        (--sort|-s)   sortTracks      ;;
+        (*)           invalidArgument ;;
+    esac
+fi
 
 # Check if the music directory is empty
 if [[ -z "$(ls -A data/music)" ]]; then
