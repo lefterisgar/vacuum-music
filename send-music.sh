@@ -44,7 +44,7 @@ askIP() {
 # NOTE: An SSH server must be listening to this IP address
 checkIP() {
     if nc -z -w 5 "$ip" 22 2>/dev/null; then
-        printTick 'Robot SSH port open\n'
+        printTick 'Robot SSH port open'
     else
         # Print a failure message and exit
         printCross 'The robot is unreachable. Make sure you are able to connect to it via SSH and try again!'
