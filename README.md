@@ -48,6 +48,14 @@ Then, proceed to install the following packages from your distribution's reposit
     </tr>
 </table>
 
+Finally, clone this repository and run the script:
+
+```bash
+$ git clone https://github.com/lefterisgar/vacuum-music ~/vacuum-music
+
+$ cd ~/vacuum-music && ./send-music.sh
+```
+
 ## Available commands
 
 <table>
