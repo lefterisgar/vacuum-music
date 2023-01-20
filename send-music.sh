@@ -269,10 +269,10 @@ mkdir -p {data/music,data/www}
 if [[ -n $1 ]]; then
     # Check for arguments
     case "$1" in
-        (--import|-i) importTracks    ;;
-        (--sort|-s)   sortTracks      ;;
-        (--stop|-p)   sshConnect stop ;;
-        (*)           invalidArgument ;;
+        (--import|-i) importTracks              ;;
+        (--sort|-s)   sortTracks; showTrackList ;;
+        (--stop|-p)   sshConnect stop           ;;
+        (*)           invalidArgument           ;;
     esac
 
     exit 0
