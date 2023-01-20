@@ -263,6 +263,8 @@ if [[ -n $1 ]]; then
         (--sort|-s)   sortTracks      ;;
         (*)           invalidArgument ;;
     esac
+
+    exit 0
 fi
 
 # Check if the music directory is empty
