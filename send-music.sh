@@ -195,17 +195,27 @@ webserverInit() {
     printInfo 'Starting web server...'
     python3 -m http.server "$port" -d data/www 2>/dev/null 1>&2 &
 
-    # Small delay to allow for the server to start
-    # NOTE: Might not suffice for slower hardware
-    sleep 0.3
+    # Create a temporary variable
+    local i
 
     # Test the server
-    if nc -z 127.0.0.1 "$port"; then
-        printTick 'The server is running!\n'
-    else
-        printCross 'The server is unreachable. The cause of the issue could not be determined.'
-        exit 113
-    fi
+    until nc -z 127.0.0.1 "$port"; do
+        # If there have been 50 attempts (>5sec) without a response from the server, throw an error
+        # For context, on my machine the counter reaches up to 10 under normal circumstances
+        if [[ $i == 50 ]]; then
+            printCross 'The server is unreachable. The cause of the issue could not be determined.'
+            exit 113
+        fi
+
+        # Small delay to allow for the server to start
+        sleep 0.1
+
+        # Increment the counter on each run
+        i=$(( i + 1 ))
+    done
+
+    # If the above loop exits, print a success message
+    printTick 'The server is running!\n'
 }
 
 # Connect to the robot via SSH and run the payload
